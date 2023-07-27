@@ -1,4 +1,4 @@
 baseURL = 'https://puzhang-ml.github.io/'
 languageCode = 'en-us'
 title = "Pu Zhang's personal website"
-theme = 'ananke'
+theme = 'PaperMod'
