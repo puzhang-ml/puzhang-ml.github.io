@@ -6,6 +6,7 @@ weight: 2
 aliases: ["/score-based"]
 tags: ["score-based"]
 author: "Pu Zhang"
+math: mathjax
 ---
 
 ### Intro
@@ -22,5 +23,13 @@ Use 1st entry as some Information
 
 add following to config file
 
+
+$$
+  \begin{bmatrix}
+    a & b \\
+    c & d \\
+    e & f \\
+  \end{bmatrix}
+$$
 
 ---
