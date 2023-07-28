@@ -55,4 +55,10 @@ This means that if we have enough steps, we can convert any distribution $X$ to 
 ![diffusion_1d](images/diffusion-1d.png)
 *<center><font size="3">The diffusion process for 1d distribution(by Pu Zhang)</font></center>*
 
+We can extend the same idea to higher dimension. For images of size 512 x 512, we can use diffusion process to gradually turn them into an 512 x 512 isotropic gaussian noise. For this high dimension case, we do the diffusion for each RGB channel of each pixel.
+
+![diffusion_images](images/diffusion-images.png)
+*<center><font size="3">The diffusion process for images(by Pu Zhang)</font></center>*
+
+
 ---
