@@ -1,7 +1,7 @@
 ---
 title: "Score Based Generative Models"
 summary: Introduce score based generative models
-date: 2023-07-27
+date: 2023-07-28
 weight: 2
 aliases: ["/score-based"]
 tags: ["score-based"]
@@ -37,28 +37,8 @@ GAN, generative adversarial network, is another popular generative model which i
 *<center><font size="3">GAN architecture(by Pu Zhang)</font></center>*
 
 
-#### Denoising Probabilitistic Diffusion Models(DDPM)
-Diffusion model was proposed in 2020 and has been shown to generate much better results than GAN. The diffusion model contains the forward process, which gradually destroy the information and the backward process that reverse the whole thing.  To explain how it works, let's start with a 1D exmaple. Let's say that we have input $X$ that follows some complex distribution, we can add gaussian noise $u_t$ to $X$ iteratively following this equation $X_t = \sqrt{1 - p} X_{t-1} + \sqrt{p} \mu_t$, where $\mu \sim \mathcal{N}(0, 1)$ and $p = 0.01$. As you can see that every step's output is a weighted average between the previous step and the gaussian noise. We can write down the final output after $T$ steps as follows:
-$$
-\begin{aligned}
-X_T &= \sqrt{1 - p} X_{T-1} + \sqrt{p} \mu_t \\\
-    &= \sqrt{1 - p} (\sqrt{1 - p} X_{T-2} + \sqrt{p} \mu_{T-1}) + \sqrt{p} \mu_t \\\
-    &= \ldots \\\
-    &= (\sqrt{1 - p})^T X_0 + \sum_{i=0}^{T-1} \sqrt{p}(\sqrt{1 - p})^{i} \mu_{T-i}
-\end{aligned}
-$$
-
-When we have enough steps, T will approach infinity. And at this time, we will see that the first term above will approach zero($(\sqrt{1 - p})^T \xrightarrow[T \to \infty]{} 0$). For the second term, because we add independent gaussian noise at each step, we can sum up these the variances of all these gaussians together to get the final variance as:
-$\sum_{i=0}^{T-1} p(1 - p)^{i} \mu_{T-i} = p \cdot \frac{1 - (1 - p)^T}{1 - (1 - p)} \xrightarrow[T \to \infty]{} 1$.
-This means that if we have enough steps, we can convert any distribution $X$ to a standard normal distribution.
-
-![diffusion_1d](images/diffusion-1d.png)
-*<center><font size="3">The diffusion process for 1d distribution(by Pu Zhang)</font></center>*
-
-We can extend the same idea to higher dimension. For images of size 512 x 512, we can use diffusion process to gradually turn them into an 512 x 512 isotropic gaussian noise. For this high dimension case, we do the diffusion for each RGB channel of each pixel.
-
-![diffusion_images](images/diffusion-images.png)
-*<center><font size="3">The diffusion process for images(by Pu Zhang)</font></center>*
+#### Diffusion Model
+Diffusion model was proposed in 2020 and has been shown to generate much better results than GAN. For detailed explaination on how diffusion model works, you can refer to my [previous post]({{< ref "/posts/diffusion-model/index" >}} "Diffusion Model").
 
 
 ---
