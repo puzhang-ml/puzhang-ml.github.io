@@ -103,6 +103,7 @@ $$
 &= \mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left ( D\_{KL}(q(x\_T\vert x\_0)\|p(x\_T)) + \sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) - \log p\_\theta(x\_0\vert x\_1) \right)
 \end{aligned}}
 $$
+*<center><font size="3">The Loss Upper Bound Derivation(by [Joseph Rocca](https://towardsdatascience.com/understanding-diffusion-probabilistic-models-dpms-1940329d6048))</font></center>*
 
 $\bar{L}$ consists of three terms. The first term, independent of the neural network parameters $\theta$, can be minimized by selecting sufficiently large steps, ensuring the final denoised data distribution resembles an isotropic gaussian distribution. While the last term is typically negligible, it can be represented using a distinct neural network if desired. The second term, the most significant, can be articulated as a sum of KL divergences.
 
@@ -157,7 +158,7 @@ $$
 \log q(x) - \log p(x) &= -\frac{1}{2} \left( (x - \hat{\mu})^T \Sigma^{-1} (x - \hat{\mu}) - (x - \mu_\theta)^T \Sigma^{-1} (x - \mu_\theta) \right) \\\
 &= -\frac{1}{2} \left( x^T \Sigma^{-1} x - 2x^T \Sigma^{-1} \hat{\mu} + \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \\\
 &+ \frac{1}{2} \left( x^T \Sigma^{-1} x - 2x^T \Sigma^{-1} \mu_\theta + \mu_\theta^T \Sigma^{-1} \mu_\theta \right) \\\
-&= x^T \Sigma^{-1} (\mu_\theta - \hat{\mu}) - \frac{1}{2} \left( \mu_\theta^T \Sigma^{-1} \mu_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right)
+&= x^T \Sigma^{-1} (\hat{\mu} - \mu_\theta) - \frac{1}{2} \left( \hat{\mu}^T \Sigma^{-1} \hat{\mu} - \mu_\theta^T \Sigma^{-1} \mu_\theta \right)
 \end{align*}
 $$
 
@@ -167,10 +168,10 @@ $$
 \begin{align*}
 D\_{KL}(q||p) &= \int q(x) \log \left( \frac{q(x)}{p(x)} \right) dx \\\
 &= \int q(x) \left( \log q(x) - \log p(x) \right) dx \\\
-&= \int q(x) \left( x^T \Sigma^{-1} (\mu\_\theta - \hat{\mu}) - \frac{1}{2} \left( \mu\_\theta^T \Sigma^{-1} \mu\_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \right) dx \\\
-&= \hat{\mu}^T \Sigma^{-1}(\mu\_\theta-\hat{\mu}) -\frac{1}{2} \left( \mu\_\theta^T \Sigma^{-1} \mu\_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \\\
-&= -\frac{1}{2\hat{\beta}\_t}\left( \hat{\mu}\_T\hat{\mu} + \mu\_\theta^T\mu\_\theta - 2 \hat{\mu}^T\mu\_\theta \right) \\\
-&= -\frac{1}{2\hat{\beta}\_t} \left( \\| \hat{\mu} - \mu\_\theta  \\|^2 \right)
+&= \int q(x) \left( x^T \Sigma^{-1} (\hat{\mu} - \mu\_\theta ) - \frac{1}{2} \left( \hat{\mu}^T \Sigma^{-1} \hat{\mu} - \mu\_\theta^T \Sigma^{-1} \mu\_\theta \right) \right) dx \\\
+&= \hat{\mu}^T \Sigma^{-1}(\hat{\mu} - \mu\_\theta) -\frac{1}{2} \left(\hat{\mu}^T \Sigma^{-1} \hat{\mu} - \mu\_\theta^T \Sigma^{-1} \mu\_\theta \right) \\\
+&= \frac{1}{2\hat{\beta}\_t}\left( \hat{\mu}\_T\hat{\mu} + \mu\_\theta^T\mu\_\theta - 2 \hat{\mu}^T\mu\_\theta \right) \\\
+&= \frac{1}{2\hat{\beta}\_t} \left( \\| \hat{\mu} - \mu\_\theta  \\|^2 \right)
 \end{align*}
 $$
 
