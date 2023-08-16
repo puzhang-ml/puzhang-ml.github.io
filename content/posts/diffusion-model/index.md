@@ -57,8 +57,7 @@ $$
 **For clarity in the LaTeX expressions, we will represent vectors with regular symbols instead of using bold font.**
 
 Leveraging this property, instead of a sequential diffusion process, we can directly compute the perturbed image at any step $X_t$ using:
-$q(x\_t \vert x\_0) = \mathcal{N}(x\_t; \sqrt{\bar{\alpha}\_t} x\_0, (1 - \bar{\alpha}\_t)I)$ 
-where $\alpha\_t = 1 - \beta\_t$ and $\bar{\alpha}\_t = \prod\_{i=1}^{t} \alpha\_i$. The probability of a given forward trajectory is denoted by $q(x\_{0:T}) = q(x\_0)\prod\_{i=0}^{T} q(x\_t \vert x\_{t-1})$.
+$$q(x\_t \vert x\_0) = \mathcal{N}(x\_t; \sqrt{\bar{\alpha}\_t} x\_0, (1 - \bar{\alpha}\_t)I) \quad \text{where} \quad \alpha\_t = 1 - \beta\_t \quad \text{and} \quad  \bar{\alpha}\_t = \prod\_{i=1}^{t} \alpha\_i$$. The probability of a given forward trajectory is denoted by $$q(x\_{0:T}) = q(x\_0)\prod\_{i=0}^{T} q(x\_t \vert x\_{t-1})$$.
 
 
 
@@ -67,7 +66,8 @@ where $\alpha\_t = 1 - \beta\_t$ and $\bar{\alpha}\_t = \prod\_{i=1}^{t} \alpha\
 
 ### Loss Upper Bound for DDPM Models
 
-Given small timesteps, the reverse process can be approximated as a Markov chain with Gaussian transition probability. We use a neural network to estimate the reverse process $q(x_{t-1}\vert x_t)$. We represent the model's predicted transition probability as $p_\theta(x_{t-1}\vert x_t)=\mathcal{N}(x_{t-1};\mu_\theta(x_t, t), \Sigma_\theta (x_t, t))$. Our goal is to have the data sampled from Gaussian noise after this reverse process align closely with the target distribution, which means minimizing the KL divergence between $q(x_0)$ and $p_\theta(x_0)$.
+Given small timesteps, the reverse process can be approximated as a Markov chain with Gaussian transition probability. We use a neural network to estimate the reverse process $q(x_{t-1}\vert x_t)$. We represent the model's predicted transition probability as 
+$$p_\theta(x_{t-1}\vert x_t)=\mathcal{N}(x_{t-1};\mu_\theta(x_t, t), \Sigma_\theta (x_t, t))$$. Our goal is to have the data sampled from Gaussian noise after this reverse process align closely with the target distribution, which means minimizing the KL divergence between $q(x_0)$ and $p_\theta(x_0)$.
 
 $$
 \begin{aligned}
@@ -76,8 +76,7 @@ $$
 &=\arg\min\_{\mu\_\theta, \Sigma\_\theta}\left( -\int q(x\_0) log\left( p\_\theta(x\_0) \right) dx\_0 \right)
 \end{aligned}
 $$
-We can utilize the right-hand side as our training loss function. This is also the loss when maximizing the log likelihood with the estimated $p_\theta(x_0)$. Obtaining $p_\theta(x_0)$ involves starting from $x_T$ and integrating over all potential backward paths, so $p_\theta(x_0) = \int p_\theta(x_{0:T})dx_{1:T}$. By inserting the posterior distribution of the forward transition kernel, we find $log(p_\theta(x_0)) = log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right)$.
-
+We can utilize the right-hand side as our training loss function. This is also the loss when maximizing the log likelihood with the estimated $p_\theta(x_0)$. Obtaining $p_\theta(x_0)$ involves starting from $x_T$ and integrating over all potential backward paths, so $$p_\theta(x_0) = \int p_\theta(x_{0:T})dx_{1:T}$$. By inserting the posterior distribution of the forward transition kernel, we find $$log(p_\theta(x_0)) = log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right)$$.
 Using the Jensen inequality, we obtain:
 $$
 log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right) \ge \int log\left( \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} \right) q(x_{1:T}\vert x_0)dx_{1:T} 
