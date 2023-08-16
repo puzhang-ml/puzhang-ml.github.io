@@ -9,12 +9,13 @@ author: "Pu Zhang"
 math: mathjax
 ---
 
-### Intro
+### The Rise of Diffusion Models
 
-I will explain how diffusion model works in this post.
+Recently, diffusion models have gained significant traction, evidenced by the rapidly expanding user base of platforms like stable diffusion, midjourney, and DALLE-2. In this article, I'll delve into the intricacies of how diffusion models operate. My aim is to present this content in a manner that minimizes the need for prior expertise in diffusion models or mathematics.
 
-#### Build intuition from 1D case
-Diffusion model was proposed in 2020 in the paper [Denoising Probabilistic Diffusion Models(DDPM)](https://arxiv.org/abs/2006.11239) and has been shown to generate much better results than GAN. The diffusion model contains the forward process, which gradually destroy the information and the backward process that reverse the whole thing.  To explain how it works, let's start with a 1D exmaple. Let's say that we have input $X$ that follows some complex distribution, we can add gaussian noise $u_t$ to $X$ iteratively following this equation $X_t = \sqrt{1 - p} X_{t-1} + \sqrt{p} \mu_t$, where $\mu \sim \mathcal{N}(0, 1)$ and $p = 0.01$. As you can see that every step's output is a weighted average between the previous step and the gaussian noise. We can write down the final output after $T$ steps as follows:
+### Understanding Diffusion Models with a 1D Illustration
+
+Introduced in 2020 through the paper titled [Denoising Probabilistic Diffusion Models(DDPM)](https://arxiv.org/abs/2006.11239), the diffusion model has demonstrated superior performance compared to GANs. This model comprises a forward process, which incrementally obliterates information, and a backward process that undoes these changes. To elucidate its workings, we'll commence with a 1D example. Suppose we have an input $X$ which adheres to a multifaceted distribution. We iteratively add Gaussian noise $u_t$ to $X$ following this equation $X_t = \sqrt{1 - p} X_{t-1} + \sqrt{p} \mu_t$, where $\mu \sim \mathcal{N}(0, 1)$ and $p = 0.01$. Observe that the output at each step is a weighted blend of the preceding step and Gaussian noise. The resulting output after $T$ steps can be expressed as:
 $$
 \begin{aligned}
 X_T &= \sqrt{1 - p} X_{T-1} + \sqrt{p} \mu_t \\\
@@ -24,44 +25,49 @@ X_T &= \sqrt{1 - p} X_{T-1} + \sqrt{p} \mu_t \\\
 \end{aligned}
 $$
 
-When we have enough steps, T will approach infinity. And at this time, we will see that the first term above will approach zero($(\sqrt{1 - p})^T \xrightarrow[T \to \infty]{} 0$). For the second term, because we add independent gaussian noise at each step, we can sum up these the variances of all these gaussians together to get the final variance as:
+As the number of steps increases and $T$ approaches infinity, the first term mentioned will converge to zero: $(\sqrt{1 - p})^T \xrightarrow[T \to \infty]{} 0$. For the second term, since we introduce independent Gaussian noise at every step, the final variance can be derived by summing the variances of all these individual Gaussians. It is given by:
 $\sum_{i=0}^{T-1} p(1 - p)^{i} \mu_{T-i} = p \cdot \frac{1 - (1 - p)^T}{1 - (1 - p)} \xrightarrow[T \to \infty]{} 1$.
-This means that if we have enough steps, we can convert any distribution $X$ to a standard normal distribution.
+This implies that given a sufficient number of steps, we can transform any distribution $X$ into a standard normal distribution.
 
 ![diffusion-1d](images/diffusion-1d.png)
 *<center><font size="3">The diffusion process for 1d distribution(by Pu Zhang)</font></center>*
 
-We can extend the same idea to higher dimension. For images of size 512 x 512, we can use diffusion process to gradually turn them into an 512 x 512 isotropic gaussian noise. For this high dimension case, we do the diffusion for each RGB channel of each pixel.
+For images sized 512 x 512, the diffusion process can be applied to each RGB channel of every pixel, transforming them into isotropic Gaussian noise. While diffusion can be used to convert intricate distributions into isotropic Gaussian ones, our primary interest lies in its inverse: transitioning the isotropic Gaussian distribution back to the original target distribution, typically where our training data originates. In essence, the diffusion model's core concept involves training from the diffusion process and then utilizing the model to reverse it.
 
 ![diffusion-images](images/diffusion-images.png)
 *<center><font size="3">The diffusion process for images(by Pu Zhang)</font></center>*
 
-We can use diffusion to transform any complex distribution into an isotropic gaussian distribution, but we are more interested in the reverse process, which is to transform the isotropic gaussian distribution into the unknown target distribution(usually the distribution where our input training data comes from). This is basically the diffusion model's high level idea: we train a model from the diffusion process and use the model to reverse the diffusion process. 
 
-#### Mathmatical Derivation for Diffusion Model
+### Decomposing the Markov Diffusion Process in DDPM
 
-The DDPM algorithm is illustrated in the picture below. DDPM models the diffusion process as a Markov process where we gradually add gaussian noise to the image. According to the Markov property, each step only depends on the previous step. So we can write the gaussian transition probability as $q(\textbf{x}\_t \vert \textbf{x}\_{t-1}) = \mathcal{N}(\textbf{x}\_t; \sqrt{1 - \beta\_t} \textbf{x}\_{t-1}, \beta\_t\textbf{I})$, this is also called the diffusion kernel. Similar to the 1D case, we can expand this iteration and represent $X_t$ using $X_0$ as follows:
+The DDPM algorithm, depicted below, models the diffusion process as a Markov sequence where Gaussian noise is progressively added to an image. Given the Markov property, each step relies solely on its predecessor. Thus, the Gaussian transition, also known as the diffusion kernel, is represented as $$q(\textbf{x}\_t \vert \textbf{x}\_{t-1}) = \mathcal{N}(\textbf{x}\_t; \sqrt{1 - \beta\_t} \textbf{x}\_{t-1}, \beta\_t\textbf{I})$$. Analogous to the 1D scenario, we can iteratively express $X_t$ using $X_0$:
+
 $$
 \begin{aligned}
 \mathbf{x}\_t 
-&= \sqrt{\alpha\_t}\mathbf{x}\_{t-1} + \sqrt{1 - \alpha\_t}\boldsymbol{\epsilon}\_{t-1} & \text{ ;where } \boldsymbol{\epsilon}\_{t-1}, \boldsymbol{\epsilon}\_{t-2}, \dots \sim \mathcal{N}(\mathbf{0}, \mathbf{I}) \\\
-&= \sqrt{\alpha\_t \alpha\_{t-1}} \mathbf{x}\_{t-2} + \sqrt{1 - \alpha\_t \alpha\_{t-1}} \bar{\boldsymbol{\epsilon}}\_{t-2} & \text{ ;where } \bar{\boldsymbol{\epsilon}}\_{t-2} \text{ merges two Gaussians (*).} \\\
+&= \sqrt{\alpha\_t}\mathbf{x}\_{t-1} + \sqrt{1 - \alpha\_t}\epsilon\_{t-1} & \text{ ;where } \epsilon\_{t-1}, \epsilon\_{t-2}, \dots \sim \mathcal{N}(\mathbf{0}, \mathbf{I}) \\\
+&= \sqrt{\alpha\_t \alpha\_{t-1}} \mathbf{x}\_{t-2} + \sqrt{1 - \alpha\_t \alpha\_{t-1}} \bar{\epsilon}\_{t-2} & \text{ ;where } \bar{\epsilon}\_{t-2} \text{ merges two Gaussians (*).} \\\
 &= \dots \\\
-&= \sqrt{\bar{\alpha}\_t}\mathbf{x}\_0 + \sqrt{1 - \bar{\alpha}\_t}\boldsymbol{\epsilon} \\\
+&= \sqrt{\bar{\alpha}\_t}\mathbf{x}\_0 + \sqrt{1 - \bar{\alpha}\_t}\epsilon \\\
 \end{aligned}
 $$
-The reason why we can merge different gaussian together is similar to the 1D case where all of these gaussian are independent with each other. Now with this derived property, instead of doing the diffusion process step-by-step, we can compute the perturbed image at any step $X_t$ in one step, following this equation, which is much faster:
-$q(\mathbf{x}\_t \vert \mathbf{x}\_0) = \mathcal{N}(\mathbf{x}\_t; \sqrt{\bar{\alpha}\_t} \mathbf{x}\_0, (1 - \bar{\alpha}\_t)\mathbf{I})$, where $\alpha\_t = 1 - \beta\_t$ and $\bar{\alpha}\_t = \prod\_{i=1}^{t} \alpha\_i$. 
-And the probability for any given forward trajectory could be given by $q(x\_{0:T}) = q(x\_0)\prod\_{i=0}^{T} q(x\_t \vert x\_{t-1})$.    
+
+*The ability to combine different Gaussians is akin to the 1D scenario, given their independence.*
+
+**For clarity in the LaTeX expressions, we will represent vectors with regular symbols instead of using bold font.**
+
+Leveraging this property, instead of a sequential diffusion process, we can directly compute the perturbed image at any step $X_t$ using:
+$q(x\_t \vert x\_0) = \mathcal{N}(x\_t; \sqrt{\bar{\alpha}\_t} x\_0, (1 - \bar{\alpha}\_t)I)$ 
+where $\alpha\_t = 1 - \beta\_t$ and $\bar{\alpha}\_t = \prod\_{i=1}^{t} \alpha\_i$. The probability of a given forward trajectory is denoted by $q(x\_{0:T}) = q(x\_0)\prod\_{i=0}^{T} q(x\_t \vert x\_{t-1})$.
+
 
 
 ![diffusion-algo](images/diffusion-algo.png)
 *<center><font size="3">The diffusion algorithm(by Pu Zhang)</font></center>*
 
+### Loss Upper Bound for DDPM Models
 
-With sufficiently small timesteps, we can approximate the reverse process as a Markov chain with gaussian transition probability. So we can use a neural network to approximate the reverse process $q(x_{t-1}\vert x_t)$. Let's denote the transition probability predicted by the model as $p\_\theta(x\_{t-1}\vert x\_t)=\mathcal{N}(x\_{t-1};\mu\_\theta(x_t, t), \Sigma_\theta (x\_t, t))$. 
-
-We want the sampled data from gaussian noise after the reverse process to be as close to the target distribution as possible. In other words, we want $q(x_0)$ to be as close to $p_\theta(x_0)$ as possible. This can be achieved by optimizing for the KL divergence between $q(x_0)$ and $p_\theta(x_0)$. 
+Given small timesteps, the reverse process can be approximated as a Markov chain with Gaussian transition probability. We use a neural network to estimate the reverse process $q(x_{t-1}\vert x_t)$. We represent the model's predicted transition probability as $p_\theta(x_{t-1}\vert x_t)=\mathcal{N}(x_{t-1};\mu_\theta(x_t, t), \Sigma_\theta (x_t, t))$. Our goal is to have the data sampled from Gaussian noise after this reverse process align closely with the target distribution, which means minimizing the KL divergence between $q(x_0)$ and $p_\theta(x_0)$.
 
 $$
 \begin{aligned}
@@ -70,12 +76,13 @@ $$
 &=\arg\min\_{\mu\_\theta, \Sigma\_\theta}\left( -\int q(x\_0) log\left( p\_\theta(x\_0) \right) dx\_0 \right)
 \end{aligned}
 $$
-We can use the right hand side as the loss function for our training. Note that this is also the loss function when we want to maximize the log likelihood based on the estimated $p_\theta(x_0)$.
-$p_\theta(x_0)$ can be got by starting from $x_T$ and integrate over all possible backward paths. In other words, $p_\theta(x_0) = \int p_\theta(x_{0:T})dx_{1:T}$. We can plugin the posterior distribution of the forward transition kernel into this equation to get $log(p_\theta(x_0)) = log \left( \int p_\theta(x_{0:T})dx_{1:T} \right) = log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right)$. According to Jensen inequality, we have 
+We can utilize the right-hand side as our training loss function. This is also the loss when maximizing the log likelihood with the estimated $p_\theta(x_0)$. Obtaining $p_\theta(x_0)$ involves starting from $x_T$ and integrating over all potential backward paths, so $p_\theta(x_0) = \int p_\theta(x_{0:T})dx_{1:T}$. By inserting the posterior distribution of the forward transition kernel, we find $log(p_\theta(x_0)) = log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right)$.
+
+Using the Jensen inequality, we obtain:
 $$
 log\left(\int \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} q(x_{1:T}\vert x_0)dx_{1:T} \right) \ge \int log\left( \frac{p_\theta(x_{0:T})}{q(x_{1:T}\vert x_0)} \right) q(x_{1:T}\vert x_0)dx_{1:T} 
 $$
-So we can define an upper bound to the loss $L$:
+This leads us to define an upper bound $\bar{L}$ for the loss $L$:
 $$
 \begin{aligned}
 L &= -\int q(x\_0)log\left(\int \frac{p\_\theta(x\_{0:T})}{q(x\_{1:T}\vert x\_0)} q(x\_{1:T}\vert x\_0)dx\_{1:T} \right) dx\_0 \\\
@@ -85,7 +92,7 @@ L &= -\int q(x\_0)log\left(\int \frac{p\_\theta(x\_{0:T})}{q(x\_{1:T}\vert x\_0)
   & = \bar{L}
 \end{aligned}
 $$
-Instead of optimizing $L$, we optimize $\bar{L}$.
+Rather than optimizing $L$, we focus on optimizing $\bar{L}$:
 $$
 \small{
 \begin{aligned}
@@ -98,9 +105,10 @@ $$
 \end{aligned}}
 $$
 
-We can see that $\bar{L}$ can be expressed as three terms, the first term does not depend on the neutral network parameters $\theta$, we can minimize it by choosing large enough steps so that the final denoised data distribution follows an isotropic gaussian distribution. The last term is generally small, we can either ignore it or use a separate neutral network to represent it. The most important term is the second term, which could be expressed as the summation of a series of KL divergence. 
+$\bar{L}$ consists of three terms. The first term, independent of the neural network parameters $\theta$, can be minimized by selecting sufficiently large steps, ensuring the final denoised data distribution resembles an isotropic gaussian distribution. While the last term is typically negligible, it can be represented using a distinct neural network if desired. The second term, the most significant, can be articulated as a sum of KL divergences.
 
-The posterior distribution for the diffusion kernel condition on $x_0$ has an analytical form:
+The posterior distribution of the diffusion kernel, given $x_0$, is defined analytically as:
+
 $$
 \scriptsize{
 \begin{aligned}
@@ -112,7 +120,7 @@ q(x\_{t-1}\vert x\_t, x\_0) &= q(x\_t\vert x\_{t-1}, x\_0) \frac{q(x\_{t-1}\vert
 $$
 *<center><font size="3">The posterior distribution for the diffusion kernel(by [Lilian Weng](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/))</font></center>*
 
-Let's denote:
+Consider the following definitions:
 $$
 \hat{\beta\_t} = \frac{1}{(\frac{\alpha\_t}{\beta\_t} + \frac{1}{1-\bar{\alpha}\_{t-1}})}
 =\frac{1}{\frac{\alpha\_t-\bar{\alpha}\_t+\beta\_t}{\beta\_t(1-\bar{\alpha}\_{t-1})}}
@@ -125,9 +133,55 @@ $$
 &=\frac{\sqrt{\alpha\_t}(1-\bar{\alpha}\_{t-1}))}{1-\bar{\alpha\_t}}x\_t+\frac{\sqrt{\bar{\alpha}\_{t-1}}\beta\_t}{1-\bar{\alpha\_t}}x\_0
 \end{aligned}
 $$
-Then We have $q(x\_{t-1}\vert x\_t, x\_0) = \mathcal{N}(x\_{t-1}; {\color{Green} \hat{\mu}(x\_t, x\_0)}, {\color{Red} \hat{\beta\_t}I})$.
+Given these, the distribution is represented as $q(x\_{t-1}\vert x\_t, x\_0) = \mathcal{N}(x\_{t-1}; {\color{Green} \hat{\mu}(x\_t, x\_0)}, {\color{Red} \hat{\beta\_t}I})$.
 
-Recall that the most important terms for our loss upper bound is $\mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left (\sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) \right)$.
+With the relation $x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(x_t - \sqrt{1 - \bar{\alpha}_t}\epsilon_t)$, the mean transforms as:
+$$
+\begin{aligned}
+\hat{\mu}\_t(x_t, x_0)
+&= \frac{\sqrt{\alpha\_t}(1 - \bar{\alpha}\_{t-1})}{1 - \bar{\alpha}\_t} \mathbf{x}\_t + \frac{\sqrt{\bar{\alpha}\_{t-1}}\beta\_t}{1 - \bar{\alpha}\_t} \frac{1}{\sqrt{\bar{\alpha}\_t}}(\mathbf{x}\_t - \sqrt{1 - \bar{\alpha}\_t}\epsilon\_t) \\\
+&= \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_t \right)
+\end{aligned}
+$$
+This illustrates that the mean can be expressed in terms of the introduced error.
 
+Consider the crucial term in our loss upper bound, $\mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left (\sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) \right)$. Given that both $q$ and $p_\theta$ are Gaussian, their KL divergence can be analytically determined.
+
+### KL Divergence Between Two Gaussian Distributions
+
+Consider two Gaussian distributions, $p$ and $q$, having the same covariance matrices:
+
+$$
+\begin{align*}
+\log q(x) &= -\frac{1}{2} \left( (x - \hat{\mu})^T \Sigma^{-1} (x - \hat{\mu}) \right) \\\
+\log p(x) &= -\frac{1}{2} \left( (x - \mu_\theta)^T \Sigma^{-1} (x - \mu_\theta) \right) \\\
+\log q(x) - \log p(x) &= -\frac{1}{2} \left( (x - \hat{\mu})^T \Sigma^{-1} (x - \hat{\mu}) - (x - \mu_\theta)^T \Sigma^{-1} (x - \mu_\theta) \right) \\\
+&= -\frac{1}{2} \left( x^T \Sigma^{-1} x - 2x^T \Sigma^{-1} \hat{\mu} + \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \\\
+&+ \frac{1}{2} \left( x^T \Sigma^{-1} x - 2x^T \Sigma^{-1} \mu_\theta + \mu_\theta^T \Sigma^{-1} \mu_\theta \right) \\\
+&= x^T \Sigma^{-1} (\mu_\theta - \hat{\mu}) - \frac{1}{2} \left( \mu_\theta^T \Sigma^{-1} \mu_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right)
+\end{align*}
+$$
+
+Consider that the expectation of ${x_T}$ under $q(x)$ is given by ${\hat{\mu}^T}$, and $\Sigma = \hat{\beta}_tI$. Using these, we can plug into the KL divergence:
+
+$$
+\begin{align*}
+D\_{KL}(q||p) &= \int q(x) \log \left( \frac{q(x)}{p(x)} \right) dx \\\
+&= \int q(x) \left( \log q(x) - \log p(x) \right) dx \\\
+&= \int q(x) \left( x^T \Sigma^{-1} (\mu\_\theta - \hat{\mu}) - \frac{1}{2} \left( \mu\_\theta^T \Sigma^{-1} \mu\_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \right) dx \\\
+&= \hat{\mu}^T \Sigma^{-1}(\mu\_\theta-\hat{\mu}) -\frac{1}{2} \left( \mu\_\theta^T \Sigma^{-1} \mu\_\theta - \hat{\mu}^T \Sigma^{-1} \hat{\mu} \right) \\\
+&= -\frac{1}{2\hat{\beta}\_t}\left( \hat{\mu}\_T\hat{\mu} + \mu\_\theta^T\mu\_\theta - 2 \hat{\mu}^T\mu\_\theta \right) \\\
+&= -\frac{1}{2\hat{\beta}\_t} \left( \\| \hat{\mu} - \mu\_\theta  \\|^2 \right)
+\end{align*}
+$$
+
+
+### Simplified Loss Equation for DDPM Models
+
+We aim to minimize the L2 distance between the means of two Gaussian distributions. Initially, our goal is for $\mu\_\theta(x\_t, t)$ to approximate $\hat{\mu}(x\_t, x\_0)$, given by $ \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_t \right) $. Instead of directly predicting $ \hat{\mu}(x\_t, x\_0) $, the model can be reformulated to estimate $ \epsilon\_t $. Thus, $ \mu\_\theta(x\_t, t) = \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_\theta(x\_t, t) \right) $. Through this reparameterization, our model focuses on predicting errors.
+
+
+
+The loss could be simplied to $$.
 
 ---

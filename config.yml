@@ -79,7 +79,7 @@ params:
     homeInfoParams:
         Title: "Wecome to Pu Zhang's blog!"
         Content: >
-            Hi there, this is Pu Zhang, a machine learning engineer at Pinterest. I use this blog to share my learnings about all kinds of machine learning models.
+            Hi there, this is Pu Zhang, a machine learning engineer at Pinterest. I use this blog to share my learnings about all kinds of machine learning models. I heavily use ChatGPT in writing these blog posts.
 
     socialIcons:
         - name: github
