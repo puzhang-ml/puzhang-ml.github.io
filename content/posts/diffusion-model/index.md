@@ -25,8 +25,8 @@ X_T &= \sqrt{1 - p} X_{T-1} + \sqrt{p} \mu_t \\\
 \end{aligned}
 $$
 
-As the number of steps increases and $T$ approaches infinity, the first term mentioned will converge to zero: $(\sqrt{1 - p})^T \xrightarrow[T \to \infty]{} 0$. For the second term, since we introduce independent Gaussian noise at every step, the final variance can be derived by summing the variances of all these individual Gaussians. It is given by:
-$\sum_{i=0}^{T-1} p(1 - p)^{i} \mu_{T-i} = p \cdot \frac{1 - (1 - p)^T}{1 - (1 - p)} \xrightarrow[T \to \infty]{} 1$.
+As the number of steps increases and $T$ approaches infinity, the first term mentioned will converge to zero $$(\sqrt{1 - p})^T \xrightarrow[T \to \infty]{} 0$$. For the second term, since we introduce independent Gaussian noise at every step, the final variance can be derived by summing the variances of all these individual Gaussians. It is given by:
+$$\sum_{i=0}^{T-1} p(1 - p)^{i} \mu_{T-i} = p \cdot \frac{1 - (1 - p)^T}{1 - (1 - p)} \xrightarrow[T \to \infty]{} 1$$.
 This implies that given a sufficient number of steps, we can transform any distribution $X$ into a standard normal distribution.
 
 ![diffusion-1d](images/diffusion-1d.png)
@@ -145,7 +145,7 @@ $$
 $$
 This illustrates that the mean can be expressed in terms of the introduced error.
 
-Consider the crucial term in our loss upper bound, $\mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left (\sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) \right)$. Given that both $q$ and $p_\theta$ are Gaussian, their KL divergence can be analytically determined.
+Consider the crucial term in our loss upper bound, $$\mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left (\sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) \right)$$. Given that both $q$ and $p_\theta$ are Gaussian, their KL divergence can be analytically determined.
 
 ### KL Divergence Between Two Gaussian Distributions
 
@@ -180,8 +180,32 @@ $$
 
 We aim to minimize the L2 distance between the means of two Gaussian distributions. Initially, our goal is for $\mu\_\theta(x\_t, t)$ to approximate $\hat{\mu}(x\_t, x\_0)$, given by $ \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_t \right) $. Instead of directly predicting $ \hat{\mu}(x\_t, x\_0) $, the model can be reformulated to estimate $ \epsilon\_t $. Thus, $ \mu\_\theta(x\_t, t) = \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_\theta(x\_t, t) \right) $. Through this reparameterization, our model focuses on predicting errors.
 
+The loss could be simplied to 
+$$
+\begin{aligned}
+L &= \mathbb{E}\_{q(\mathbf{x}\_{0:T})} \left (\sum\_{t=2}\^TD\_{KL}(q(x\_{t-1}\vert x\_t, x\_0)\| p\_\theta(x\_{t-1}\vert x\_t)) \right) \\\
+&=\mathbb{E}\_{q(\mathbf{x}\_{0:T})}\Big[ \frac{1}{2\hat{\beta}\_t} \\| \hat{\mu}_t(x\_t, x\_0) - \mu\_{\theta}(x\_t, t) \\|^2  \Big] \\\
+&=\mathbb{E}\_{q(\mathbf{x}\_{0:T})}\Big[ \frac{1}{2\hat{\beta}\_t} \\| \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_t \right) - \frac{1}{\sqrt{\alpha\_t}} \left( x\_t - \frac{1 - \alpha\_t}{\sqrt{1 - \bar{\alpha}\_t}} \epsilon\_\theta(x\_t, t) \right) \\|^2  \Big] \\\
+&= \mathbb{E}\_{q(\mathbf{x}\_{0:T})}\Big[\frac{(1-\alpha_t)^2}{2\hat{\beta}\_t\alpha_t(1-\bar{\alpha}_t)} \\| \epsilon_t - \epsilon\_{\theta}(x_t, t) \\|^2  \Big] \\\
+&= \mathbb{E}\_{q(\mathbf{x}\_{0:T})}\Big[ \frac{(1-\alpha_t)^2}{2\hat{\beta}\_t\alpha_t(1-\bar{\alpha}_t)} \\| \epsilon_t - \epsilon\_{\theta}(\sqrt{\bar{\alpha}_t}x_0 + \sqrt{1 - \bar{\alpha}_t}\epsilon_t, t) \\|^2 \Big]
+\end{aligned}
+$$.
+The [original DDPM paper](https://arxiv.org/abs/2006.11239) demonstrates improved empirical outcomes by omitting the weights in the equation, leading to the final loss
+$$
+\begin{aligned}
+L^{\text{simple}} = \mathbb{E}\_{t \sim [1, T]}\Big[ \\| \epsilon_t - \epsilon\_{\theta}(\sqrt{\bar{\alpha}_t}x_0 + \sqrt{1 - \bar{\alpha}_t}\epsilon_t, t) \\|^2 \Big]
+\end{aligned}
+$$.
 
+### Training & Sampling Algorithm
 
-The loss could be simplied to $$.
+Using the simplified loss, the training process is straightforward. The neural network modeling the injected noise is versatile and can handle diverse data types. For images, a U-Net architecture is commonly employed. Training involves iterative sampling of triplets: <input image, step, noise> followed by gradient descent based on the loss function.
+
+![diffusion-training](images/diffusion-training.png)
+*<center><font size="3">The diffusion training algorithm(from [DDPM](https://arxiv.org/abs/2006.11239))</font></center>*
+During sampling, we first obtain noise from an isotropic Gaussian distribution. Using our learned noise predictor, we iteratively de-noise the data. While de-noising should yield the target image, the algorithm introduces Gaussian noise again and recommences the iteration. This iterative approach acknowledges that the model may not capture the noise in a single estimation. Through these repetitive de-noising steps, we achieve high-quality output images.
+
+![diffusion-sampling](images/diffusion-sampling.png)
+*<center><font size="3">The diffusion sampling algorithm(from [DDPM](https://arxiv.org/abs/2006.11239))</font></center>*
 
 ---
