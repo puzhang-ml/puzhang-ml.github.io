@@ -32,10 +32,6 @@ languages:
                 - name: Tags
                   url: tags/
                   weight: 10
-                - name: WiKi
-                  url: https://github.com/adityatelange/hugo-PaperMod/wiki/
-                - name: Discord
-                  url: https://discord.gg/ahpmTvhVmp
 
 outputs:
     home:
@@ -52,7 +48,8 @@ params:
     defaultTheme: auto
     # disableThemeToggle: true
     ShowShareButtons: true
-    ShowReadingTime: true
+    # ShowReadingTime: true
+    ShowWordCount: true
     # disableSpecial1stPost: true
     displayFullLangName: true
     ShowPostNavLinks: true
