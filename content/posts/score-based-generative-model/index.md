@@ -11,7 +11,7 @@ math: mathjax
 
 ### Intro
 
-In the continually advancing world of image generation techniques, diffusion-centric methods have seen a notable rise in interest, alongside other significant progressions. Models such as [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release), [Imagen](https://imagen.research.google/), and DALL-E2(https://openai.com/dall-e-2) have garnered acclaim for their impressive feats. In this article, I'll demonstrate the connection between score-based generative models and these cutting-edge generative models. Our discussion will include a side-by-side review of diffusion models versus score-based generative models, illustrating the seamless integration of diffusion methods within the score-based paradigm. Moreover, I'll delve into captivating scenarios where classifiers can steer the diffusion mechanism, facilitating the creation of image examples influenced by specific class identifiers or textual cues.
+In the continually advancing world of image generation techniques, diffusion-centric methods have seen a notable rise in interest, alongside other significant progressions. Models such as [Stable Diffusion](https://stability.ai/blog/stable-diffusion-public-release), [Imagen](https://imagen.research.google/), and DALL-E2(https://openai.com/dall-e-2) have garnered acclaim for their impressive feats. In this article, I'll demonstrate the connection between score-based generative models and these cutting-edge generative models. Our discussion will include a side-by-side review of diffusion models versus score-based generative models, illustrating the seamless integration of diffusion methods within the score-based paradigm. Moreover, I'll delve into captivating scenarios where classifiers can steer the diffusion mechanism, facilitating the creation of image examples influenced by specific class identifiers or textual cues. I utilized many of the explanations and illustrations found in [this post](https://yang-song.net/blog/2021/score/) written by the primary author of the score-based generative model paper.
 
 ### Generative Model History
 
@@ -50,5 +50,27 @@ In generative modeling, the goal is to mirror the intricate distribution of auth
 
 ![generative-model-normalization](images/generative-model-normalization.png)
 *<center><font size="3">Model Normalization Challenge(by Pu Zhang)</font></center>*
+
+
+The primary concept of the [score based generative modeling paper](https://arxiv.org/abs/2011.13456) revolves around score functions. This highlighted section of the illustration represents a density function alongside the score function for a combination of two Gaussian distributions. The density function is visually represented with varying shades, with a darker shade signifying a denser region. The score function, on the other hand, represents a vector field indicating the direction of the steepest increase in the density function. Given the density function, deducing the score function becomes straightforward by merely computing the derivative. In a similar vein, knowing the score function enables the retrieval of the density function, in essence, by calculating integrals. Hence, the score function and the probability distribution are interchangeable in their roles.
+
+![score-density](images/score-density.png)
+*<center><font size="3">Score Function vs Probability Density(by Pu Zhang)</font></center>*
+
+Revisiting the challenge related to the normalizing constant, it becomes evident that when the gradient of the probability function is computed, the normalization constant turns to zero because it does not rely on the variable $x$ in question.
+$$
+\begin{aligned}
+\nabla_x \log p_\theta(x) &= \nabla_x f_\theta(x) - \nabla_x \log Z_\theta \\\
+&= \nabla_x f_\theta(x) \\\
+&= s_\theta(x)
+\end{aligned}
+$$
+
+Instead of employing a DNN to represent $p_\theta(x)$ outright, we utilize the DNN to characterize the score function $s_\theta(x)$. The goal now shifts to contrasting two vector fields associated with score functions. Subsequently, we can determine the disparity vectors for those vector pairs. Finally, by averaging over the densities of these disparity vectors, we derive a singular scalar-valued objective. This technique is recognized as the score matching algorithm.
+
+
+![score-matching](images/score-matching.png)
+*<center><font size="3">Score Matching Algorithm(by Pu Zhang)</font></center>*
+
 
 ---
