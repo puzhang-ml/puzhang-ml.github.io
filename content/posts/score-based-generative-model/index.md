@@ -72,5 +72,11 @@ Instead of employing a DNN to represent $p_\theta(x)$ outright, we utilize the D
 ![score-matching](images/score-matching.png)
 *<center><font size="3">Score Matching Algorithm(by Pu Zhang)</font></center>*
 
+After determining the estimated score function, we must devise a method to construct our generative model by generating new data points from the given vector field of score functions. A potential strategy is to shift these points according to the directions suggested by the score function. Nevertheless, this won't yield valid samples as the points will ultimately converge. This challenge can be circumvented by adhering to a noisy rendition of the score function. In essence, we aim to introduce Gaussian noise into our score function and pursue those noise-distorted score functions. This technique is widely recognized as Langevin dynamics.
+
+*<center>![langevin](images/langevin.gif)</center>*
+*<center><font size="3">Use Langevin dynamics for Sampling(by [Yang Song](https://yang-song.net/blog/2021/score/))</font></center>*
+
+
 
 ---
