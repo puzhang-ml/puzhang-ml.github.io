@@ -75,7 +75,7 @@ Instead of employing a DNN to represent $p_\theta(x)$ outright, we utilize the D
 ![score-matching](images/score-matching.png)
 *<center><font size="3">Score Matching Algorithm(by Pu Zhang)</font></center>*
 
-In the score matching algorithm, we are given a set of samples from our input data distribution $$\{x_1, x_2, \dots, x_N\} \overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x)$$. We want to use a score model to estimate the score function of the input data distribution $$\nabla_x \log p_{\text{data}}(x)$$. The algorithm gives us a way to compare two vector fields of scores $$\frac{1}{2}E_{p_{\text{data}(x)}}[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|]$$. This equation could be rewritten following integration by parts. To show how it works, let's use an 1D example for simplicity. 
+In the score matching algorithm, we are given a set of samples from our input data distribution $$\{x_1, x_2, \dots, x_N\} \overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x)$$. We want to use a score model $s_\theta(x)$ to estimate the score function of the input data distribution $$\nabla_x \log p_{\text{data}}(x)$$. To compare two vector fields of scores, our objective function is $$\frac{1}{2}E_{p_{\text{data}(x)}}\left[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|\right]$$. This equation could be rewritten to not depend on $\nabla_{x}\log p_{data}(x)$ following integration by parts. To show how it works, let's use an 1D example for simplicity. 
 $$
 \begin{aligned}
 -\int p(x) \nabla\_x \log p(x) s\_\theta(x) dx &= -\int p(x) \frac{\nabla\_x p(x)}{p(x)} s\_\theta(x) dx \\\
@@ -101,12 +101,14 @@ $$
                                                               &= {\color{Blue} \text{const}} + {\color{Orange} \frac{1}{2}E_{p(x)}[s_\theta(x)^2]} + {\color{Green} E_{p(x)} [\nabla_x s_{\theta}(x)]}
 \end{aligned}
 $$
-This illustration is in 1D case, generally we have
+The blue part above is constant because it does not depent on $\theta$. This illustration is in 1D case, in general, we have
 $$
+\small{
 \begin{aligned}
-\frac{1}{2}E_{p_{\text{data}(x)}}[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|] &= E_{p_{data}(x)}[\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x))] \\\
-                                                                                          &\approx \frac{1}{N} \sum_{i=1}^N [\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x))]
+\arg\min_{\theta} \frac{1}{2}E_{p_{\text{data}(x)}}[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|] &= \arg\min_{\theta} E_{p_{data}(x)}\left[\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x)) \right] \\\
+                                                                                          &\approx \arg\min_{\theta} \frac{1}{N} \sum_{i=1}^N \left[\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x))\right]
 \end{aligned}
+}
 $$
 
 
