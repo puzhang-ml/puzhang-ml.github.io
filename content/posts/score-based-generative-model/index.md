@@ -66,11 +66,49 @@ $$
 \end{aligned}
 $$
 
-Instead of employing a DNN to represent $p_\theta(x)$ outright, we utilize the DNN to characterize the score function $s_\theta(x)$. The goal now shifts to contrasting two vector fields associated with score functions. Subsequently, we can determine the disparity vectors for those vector pairs. Finally, by averaging over the densities of these disparity vectors, we derive a singular scalar-valued objective. This technique is recognized as the score matching algorithm.
 
+#### Score Matching
+
+
+Instead of employing a DNN to represent $p_\theta(x)$ outright, we utilize the DNN to characterize the score function $s_\theta(x)$. The goal now shifts to contrasting two vector fields associated with score functions. Subsequently, we can determine the disparity vectors for those vector pairs. Finally, by averaging over the densities of these disparity vectors, we derive a singular scalar-valued objective. This technique is recognized as the score matching algorithm.
 
 ![score-matching](images/score-matching.png)
 *<center><font size="3">Score Matching Algorithm(by Pu Zhang)</font></center>*
+
+In the score matching algorithm, we are given a set of samples from our input data distribution $$\{x_1, x_2, \dots, x_N\} \overset{\text{i.i.d.}}{\sim} p_{\text{data}}(x)$$. We want to use a score model to estimate the score function of the input data distribution $$\nabla_x \log p_{\text{data}}(x)$$. The algorithm gives us a way to compare two vector fields of scores $$\frac{1}{2}E_{p_{\text{data}(x)}}[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|]$$. This equation could be rewritten following integration by parts. To show how it works, let's use an 1D example for simplicity. 
+$$
+\begin{aligned}
+-\int p(x) \nabla\_x \log p(x) s\_\theta(x) dx &= -\int p(x) \frac{\nabla\_x p(x)}{p(x)} s\_\theta(x) dx \\\
+&= - \int \nabla\_x p(x) s\_\theta(x) dx \\\
+&= -p(x) s\_\theta(x)\Big|\_{x=-\infty}^\infty + \int p(x) \nabla\_x s\_\theta(x) dx \\\
+&= \int p(x) \nabla_x s_{\theta}(x) dx
+\end{aligned}
+$$
+The last step for derivation holds because for most common probability density functions(pdfs), the value of the pdf approaches zero as $x$ approaches $\pm \infty$, so we have 
+$$
+\begin{aligned}
+p(x) s\_\theta(x)\Big|\_{x=-\infty}^\infty &= p(\infty)s_\theta(\infty) - p(-\infty)s_\theta(-\infty) \\\
+&= 0 \times s_\theta(\infty) - 0 \times s_\theta(-\infty) \\\
+&= 0
+\end{aligned}$$.
+Plugin this into the objective of score matching, we have
+$$
+\begin{aligned}
+\frac{1}{2}\left[ (\nabla_x \log p(x) - s_\theta(x))^2\right] &= \frac{1}{2}\int p(x)(\nabla_x \log p(x))^2 dx + \frac{1}{2}\int p(x)s_\theta(x)^2 dx \\\
+                                                              &- \int p(x) \nabla_x \log p(x) s_\theta(x) dx \\\
+                                                              &= {\color{Blue} \frac{1}{2}\int p(x)(\nabla_x \log p(x))^2 dx} + {\color{Orange} \frac{1}{2}\int p(x)s_\theta(x)^2 dx} \\\
+                                                              &+ {\color{Green} \int p(x) \nabla_x s_{\theta}(x) dx}  \\\
+                                                              &= {\color{Blue} \text{const}} + {\color{Orange} \frac{1}{2}E_{p(x)}[s_\theta(x)^2]} + {\color{Green} E_{p(x)} [\nabla_x s_{\theta}(x)]}
+\end{aligned}
+$$
+This illustration is in 1D case, generally we have
+$$
+\begin{aligned}
+\frac{1}{2}E_{p_{\text{data}(x)}}[\\| \nabla_x \log p_{\text{data}}(x) - s_\theta(x) \\|] &= E_{p_{data}(x)}[\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x))] \\\
+                                                                                          &\approx \frac{1}{N} \sum_{i=1}^N [\frac{1}{2}\\| s_\theta(x) \\|^2 + \text{trace} ( \nabla_x s_\theta(x))]
+\end{aligned}
+$$
+
 
 After determining the estimated score function, we must devise a method to construct our generative model by generating new data points from the given vector field of score functions. A potential strategy is to shift these points according to the directions suggested by the score function. Nevertheless, this won't yield valid samples as the points will ultimately converge. This challenge can be circumvented by adhering to a noisy rendition of the score function. In essence, we aim to introduce Gaussian noise into our score function and pursue those noise-distorted score functions. This technique is widely recognized as Langevin dynamics.
 
