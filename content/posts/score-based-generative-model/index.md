@@ -177,7 +177,7 @@ q(x_{i-1}\| x_t, x_0) &= q(x_t \| x_{t-1}, x_0) \frac{q(x_{t-1}\|x_0)}{q(x_t\|x_
 $$. So the variance of the distribution is $$\hat{\beta_t}=\frac{1}{\frac{1}{\sigma_t^2-\sigma_{t-1}^2} + \frac{1}{\sigma_{t-1}^2}}=\frac{\sigma_{t-1}^2(\sigma_t^2-\sigma_{t-1}^2)}{\sigma_t^2}$$. And the mean of the distribution is 
 $$
 \hat{\mu}\_t(x_t, x_0)=\frac{\frac{x_t}{\sigma_t^2-\sigma_{t-1}^2} + \frac{x_0}{\sigma_{t-1}^2}}{\frac{1}{\sigma_t^2-\sigma_{t-1}^2} + \frac{1}{\sigma_{t-1}^2}}=\frac{\sigma_{t-1}^2}{\sigma_t^2}x_t + (1- \frac{\sigma_{t-1}^2}{\sigma_t^2})x_0
-$$. If we parameterize the reverse transition kernel as $$p_\theta(x_{i-1}\|x_i)=\mathcal{N}(x_{i-1};\mu_\theta(x_i, i), \tau_i^2I)$$, one single KL-divergence from the middle term in DDPM can be written as 
+$$. If we parameterize the reverse transition kernel as $$p_\theta(x_{i-1}\|x_i)=\mathcal{N}(x_{i-1};\mu_\theta(x_i, i), \tau_i^2I)$$, one single KL-divergence from the middle term in DDPM loss can be written as 
 $$
 \begin{aligned}
 L\_{t-1} &= E\_q\left[ D\_{KL}(q(x\_{i-1}|x\_i, x\_0)) \\| p\_\theta(x\_{i-1}|x\_i) \right] \\\
@@ -194,5 +194,35 @@ $$, where $s\_{\theta}(x_i, i)$ represents $z/\sigma_i$. Similar to [DDPM]({{< r
 $$
 x\_{i-1} = x\_i + (\sigma\_i^2-\sigma\_{i-1}^2)s\_{\theta^\*}(x\_i, i) + \sqrt{\frac{\sigma\_{i-1}^2(\sigma\_i^2-\sigma\_{i-1}^2)}{\sigma\_i^2}}z\_i, i=1, 2, \dots, N
 $$, where $\theta^\*$ denotes the optimal parameter of $s\_\theta$ and $z\_i \sim \mathcal{N}(0, I)$. We call this equation the ancestral sampling for SMLD models.
+
+#### Convert SMLD to SDE
+
+If we increase the number of noise perturbation steps to infinity, the noise perturbation process is a continuous stochastic process. And stochastic processes(diffusion processes in particular) are solutions of stochastic differetial equations(SDEs). 
+*<center>![perturb_vp](images/perturb_vp.gif)</center>*
+*<center><font size="3">Perturbing data to noise with a continuous-time stochastic process(by [Yang Song](https://yang-song.net/blog/2021/score/))</font></center>*
+
+Generally, a SDE has the following form
+$$
+dx = \overbrace{f(x, t)}^{\text{deterministic drift}}dt + g(t)\underbrace{dw}_{\text{infinitesimal noise}}
+$$. Without loss of generality, in our SMLD framework, let's use a simple form SDE for the forward process: $dx_t = \sigma(t)dw_t$. We can compute the reverse SDE as follows 
+$$
+dx\_t = -\sigma(t)^2\nabla\_x \underbrace{{\color{Red}\log p\_t(x\_t)dt}}\_{\text{score function}} + \sigma(t) d \bar{w\_t}
+$$. We use a time conditional score model $s\_\theta(x, t)$ to approximate the score function $\nabla\_x \log p\_t(x)$. And the training objective is very similar to the discrete case 
+$$
+E\_{t \sim \text{Uniform}[0, T]}\left[ \lambda(t) \left \\| \nabla\_x \log p\_t(x) - s\_\theta(x, t)  \right\\|\_2^2 \right]
+$$. Once the score model is trained, we can plug it into the reverse-time SDE 
+$$
+dx = \sigma^2(t)s\_\theta(x, t)dt + \sigma(t) d\bar{w}
+$$, then we can use some common SDE solver like the Euler-Maruyama solver to solve this reverse-time SDE to generate samples
+$$
+\begin{aligned}
+x &\leftarrow x - \sigma(t)^2 s\_\theta(x, t) \Delta t + \sigma(t) z \quad (z \sim \mathcal{N}(0, | \Delta t | I)) \\\
+t &\leftarrow t + \Delta t
+\end{aligned}
+$$.
+
+*<center>![sde_schematic](images/sde_schematic.jpg)</center>*
+*<center><font size="3">The SMLD Algorithm in the ODE Paradigm(by [Yang Song](https://yang-song.net/blog/2021/score/))</font></center>*
+
 
 ---
