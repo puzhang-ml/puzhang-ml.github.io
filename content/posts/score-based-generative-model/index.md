@@ -112,11 +112,45 @@ $$
 $$
 
 
-After determining the estimated score function, we must devise a method to construct our generative model by generating new data points from the given vector field of score functions. A potential strategy is to shift these points according to the directions suggested by the score function. Nevertheless, this won't yield valid samples as the points will ultimately converge. This challenge can be circumvented by adhering to a noisy rendition of the score function. In essence, we aim to introduce Gaussian noise into our score function and pursue those noise-distorted score functions. This technique is widely recognized as Langevin dynamics.
+After determining the estimated score function, we must devise a method to construct our generative model by generating new data points from the given vector field of score functions. A potential strategy is to shift these points according to the directions suggested by the score function. Nevertheless, this won't yield valid samples as the points will ultimately converge. This challenge can be circumvented by adhering to a noisy rendition of the score function. In essence, we aim to introduce Gaussian noise into our score function and pursue those noise-distorted score functions. This technique is widely recognized as Langevin dynamics. More formally, have the following algorithm.
+
+Our goal is to sample from $p(x)$ using only the score $\nabla_x \log p(x)$.
+$$
+\begin{aligned}
+\text{Initialize} &\quad x^0 \sim \pi(x) \\\
+\text{Repeat} &\quad t \leftarrow 1, 2, \dots, T \\\
+&\quad z^t \sim \mathcal{N}(0, I) \\\
+&\quad x_t \leftarrow x^{t-1} + \frac{\epsilon}{2} \nabla_x \log p(x^{t-1}) + \sqrt{\epsilon} z^t
+\end{aligned}
+$$
+If $\epsilon \rightarrow 0$ and $T \rightarrow \infty$, we are guarantteed to have $x^T \sim p(x)$. The score function can be estimated via the score matching algorithm: $s_\theta(x) \approx \nabla_x \log p(x)$. 
 
 *<center>![langevin](images/langevin.gif)</center>*
 *<center><font size="3">Use Langevin dynamics for Sampling(by [Yang Song](https://yang-song.net/blog/2021/score/))</font></center>*
 
+Directly applying score matching plus langevin dynamics does not give good results. This is because in low data density regions, the score function and the estiamted score function are not accurate, so it will be hard for Langevin Dynamics to navigate through those low-density regions.
 
+*<center>![naive-smld](images/naive-smld.png)</center>*
+*<center><font size="3">Challenges for Naive SMLD(by Pu Zhang)</font></center>*
+
+To solve this challenge, we can inject Gaussian noise to perturb our data points. After adding enough Gaussian noise, we perturb the data points to everywhere in the space. This means the size of low data density regions becomes smaller. So in the context of image generation, adding additional Gaussian noise means we inject Gaussian noise to perturb each pixel of the image. For this toy example in the picture below, you can see that, after injecting the right amount of Gaussian noise, the estimated scores become accurate almost everywhere.
+But simply injecting Gaussian noise will not solve all the problems. Because of perturbation of data points, those noisy data distances are no longer good approximations to the original true data density.
+
+
+*<center>![pertubed-smld](images/pertubed-smld.png)</center>*
+*<center><font size="3">SMLD on Pertubed Data(by Pu Zhang)</font></center>*
+
+To solve this problem, we can use a multiple sequence of different noise levels. Here we use Gaussian noise with mean 0 and standard deviation from $\sigma_1$ to $\sigma_3$ to perturb our training data set($\sigma_1 < \sigma_2 < \sigma_3$). And this will give us three noisy training data sets. For Each noisy data set, there will be a corresponding noise data density, which we denote as $p_{\sigma_1}(x)$ to $p_{\sigma_3}(x)$. 
+
+*<center>![multi-level-pertubed-distribution](images/multi-level-pertubed-distribution.png)</center>*
+*<center><font size="3">Multi-level Noise Pertubed Data Distribution(by Pu Zhang)</font></center>*
+
+
+To estimate the score function, instead of training separate score models on different noise levels, we use a noise conditional score model, which takes noise level $\sigma$ as one additional input dimension to the model. We use score matching to jointly train the score model across all levels. If our optimizer is powerful enough, and if our model is expressive enough, we will obtain accurate score estimation for all noise labels.
+During sampling time, we can first apply Langevin dynamics to sample from the score model with the biggest perturbation noise. And the samples will be used as the initialization to sample from the score model of the next noise level. And then we continue in this fashion until finally we generate samples from the score function with the smallest noise level.
+
+
+*<center>![multi-level-pertubed-loss](images/multi-level-pertubed-loss.png)</center>*
+*<center><font size="3">Multi-level Noise Pertubed Model and Loss(by Pu Zhang)</font></center>*
 
 ---
