@@ -115,7 +115,7 @@ $$
 q(x\_{t-1}\vert x\_t, x\_0) &= q(x\_t\vert x\_{t-1}, x\_0) \frac{q(x\_{t-1}\vert x\_0)}{q(x\_t \vert x\_0)} \\\
 &\propto \exp\left( -\frac{1}{2}\left( \frac{(x\_t-\sqrt{\alpha\_t}x\_{t-1})\^2}{\beta\_t} + \frac{(x\_{t-1}-\sqrt{\bar{\alpha}\_{t-1}}x\_0)\^2}{1-\bar{\alpha}\_{t-1}} + \frac{(x\_t-\sqrt{\bar{\alpha}\_t}x\_0)\^2}{1-\bar{\alpha}\_t} \right ) \right) \\\
 &= \exp\left( -\frac{1}{2}\left( \frac{x\_t\^2-2\sqrt{\alpha\_t}x\_t {\color{Green} x\_{t-1}} + \alpha\_t{\color{Red}  x\_{t-1}\^2}}{\beta\_t} + \frac{{\color{Red} x\_{t-1}\^2}-2\sqrt{\bar{\alpha}\_{t-1}}x\_0{\color{Green} x\_{t-1}} + \bar{\alpha}\_{t-1}x\_0\^2}{1-\bar{\alpha}\_{t-1}} + \frac{(x\_t-\sqrt{\bar{\alpha}\_t}x\_0)\^2}{1-\bar{\alpha}\_t} \right ) \right) \\\
-&= \exp\left( \frac{1}{2}\left({\color{Red} (\frac{\alpha\_t}{\beta\_t} + \frac{1}{1-\bar{\alpha}\_{t-1}})x\_{t-1}\^2} - {\color{Green} (\frac{2\sqrt{\alpha\_t}}{\beta\_t}x\_t + \frac{2\sqrt{\bar{\alpha}\_{t-1}}}{1-\bar{\alpha}\_{t-1}}x\_0)x\_{t-1}} + C(x\_t, x\_0) \right)\right)
+&= \exp\left( -\frac{1}{2}\left({\color{Red} (\frac{\alpha\_t}{\beta\_t} + \frac{1}{1-\bar{\alpha}\_{t-1}})x\_{t-1}\^2} - {\color{Green} (\frac{2\sqrt{\alpha\_t}}{\beta\_t}x\_t + \frac{2\sqrt{\bar{\alpha}\_{t-1}}}{1-\bar{\alpha}\_{t-1}}x\_0)x\_{t-1}} + C(x\_t, x\_0) \right)\right)
 \end{aligned}}
 $$
 *<center><font size="3">The posterior distribution for the diffusion kernel(by [Lilian Weng](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/))</font></center>*
