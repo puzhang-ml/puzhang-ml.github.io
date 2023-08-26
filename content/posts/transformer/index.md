@@ -81,6 +81,15 @@ Calculating the weighted sum of value matrices and eventually convert to scores 
 
 ### Multi-Headed Attention
 
+The idea for multi-head attention is to not only use three matrices, but 8 set of matrices where each set has its own independent <span style="color: purple;">Query</span>, <span style="color: orange;">Key</span> and <span style="color: blue;">Value</span> matrices. Each set of matrices is randomly initialized. After training, each set of matrices are used to project the input embedding or the encoder output into a different representation space. This will result in 8 matrices, to make the output dimensions same with the single-head case, we first concatenate all $Z$ matrices together into a single matrix and then multiply it with a matrix ${\color{Orange} \mathbf{W^O}}$ to get the final output $Z$. This output will have the same dimensions as the single-head case.
+
+
+*<center>![multi-head-attention](images/multi-head-attention.png)</center>*
+*<center><font size="3">Multi-Head Attention(by Pu Zhang)</font></center>*
+
+
+### Positional Encoding
+
 
 
 ---
