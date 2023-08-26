@@ -68,5 +68,19 @@ We then use the calculated scores as weights to multiply with the <span style="c
 *<center>![weighted-sum](images/weighted-sum.png)</center>*
 *<center><font size="3">Self-Attention Weighted Sum(by Pu Zhang)</font></center>*
 
+In real applications, instead of processing the input sample-by-sample, we usually do batch processing to increase the efficiency and fully utilize the parallelism of GPUs. For batch processing, instead of working on input vectors, we will work on input matrix. And by multiplying with each of the three matrices(${\color{Orchid} \mathbf{W^Q}}, {\color{Orange} \mathbf{W^K}}, {\color{Blue} \mathbf{W^V}}$), we will get the the corresponding <span style="color: purple;">Query</span>, <span style="color: orange;">Key</span> and <span style="color: blue;">Value</span> matrices(${\color{Orchid} \mathbf{Q}}, {\color{Orange} \mathbf{K}}, {\color{Blue} \mathbf{V}}$).
+
+*<center>![matrix-three-vectors](images/matrix-three-vectors.png)</center>*
+*<center><font size="3">Self-Attention Batch Processing: Key, Query, Value matrices(by Pu Zhang)</font></center>*
+
+Calculating the weighted sum of value matrices and eventually convert to scores using softmax is also done via matrix operations.
+
+
+*<center>![matrix-weighted-sum-softmax](images/matrix-weighted-sum-softmax.png)</center>*
+*<center><font size="3">Self-Attention Batch Processing: Weighted Sum, Softmax(by Pu Zhang)</font></center>*
+
+### Multi-Headed Attention
+
+
 
 ---
