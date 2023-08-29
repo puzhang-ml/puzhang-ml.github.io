@@ -90,6 +90,22 @@ The idea for multi-head attention is to not only use three matrices, but 8 set o
 
 ### Positional Encoding
 
+The self-attention layer introduced so far does not take word ordering into consideration and is treating the same word in different locations the same. However, word ordering clearly matters in natural languages. To address this issue, [the paper](https://arxiv.org/abs/1706.03762) introduces positional encoding. For a word in the position $pos$, its $(2i)$-th or $(2i+1)$-th dimension embedding's positional encoding is calculated as 
+$$
+\begin{aligned}
+PE_{(pos, 2i)}&=sin(pos/10000^{2i/d_{model}}) \\\
+PE_{(pos, 2i+1)}&=cost(pos/10000^{2i/d_{model}})
+\end{aligned}
+$$, here $d_{model}$ is the model's embedding dimensions. One example of the generated positional embedding is shown in the picture below.
+
+*<center>![attention-is-all-you-need-positional-encoding](images/attention-is-all-you-need-positional-encoding.png)</center>*
+*<center><font size="3">Positional Encoding(by Pu Zhang)</font></center>*
+
+
+Once the positional encoding is computed, it will be added to input words' embeddings to get the final embeddings with time signal. 
+
+*<center>![positional-encoding-add](images/positional-encoding-add.png)</center>*
+*<center><font size="3">Positional Encoding Added to Input(by Pu Zhang)</font></center>*
 
 
 ---
