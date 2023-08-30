@@ -107,5 +107,28 @@ Once the positional encoding is computed, it will be added to input words' embed
 *<center>![positional-encoding-add](images/positional-encoding-add.png)</center>*
 *<center><font size="3">Positional Encoding Added to Input(by Pu Zhang)</font></center>*
 
+### Residual & Layer Norm
+
+[The paper](https://arxiv.org/abs/1706.03762) also adds residual connection to skip the self-attention layer or the feed-forward layer. The residual connection output and the self-attention layer output are added together and then go through layer-normalization.
+
+
+*<center>![add-normalize](images/add-normalize.png)</center>*
+*<center><font size="3">Residual Connection and Layer Norm(by Pu Zhang)</font></center>*
+
+
+### Putting Everything Together
+
+The decoders are quite similar with the encoders. If there are just two encoders and two decoders in our transformer architecture, the structure is illustrated in the picture below. 
+
+The <span style="color: orange;">key vectors</span> and <span style="color: blue;">value vectors</span> of the final encoder will be sent to all the encoder-decoder attention layer in the decoder stack. This helps the decoder focus on appropriate places in the input sequence.
+
+In decoders, the self-attention layer is only allowed to attend to the earlier positions in the output to avoid cheating, this is done through masking future positions to $-\text{inf}$ before softmax.
+
+The decoders output a vector of floats and the output will first go through a fully connected layer and then go through a softmax layer to output the probability over the vocabulary.
+
+*<center>![global-architecture-two-layer](images/global-architecture-two-layer.png)</center>*
+*<center><font size="3">Transformer Architecture with Two Encoders/Decoders(by Pu Zhang)</font></center>*
+
+
 
 ---
