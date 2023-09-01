@@ -1,10 +1,10 @@
 ---
-title: "Transformer"
-summary: Introduce how transformer works
+title: "Transformers"
+summary: Introduce how transformers work
 date: 2023-08-22
 weight: 2
-aliases: ["/transformer"]
-tags: ["transformer"]
+aliases: ["/transformers"]
+tags: ["transformers"]
 author: "Pu Zhang"
 math: mathjax
 ---
