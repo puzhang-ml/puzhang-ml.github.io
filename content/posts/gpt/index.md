@@ -1,7 +1,7 @@
 ---
 title: "GPT"
 summary: Introduce how GPT works
-date: 2023-08-22
+date: 2023-10-01
 weight: 2
 aliases: ["/gpt"]
 tags: ["gpt"]

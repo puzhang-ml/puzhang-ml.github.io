@@ -1,7 +1,7 @@
 ---
 title: "Diffusion Model"
 summary: Introduce how diffusion model works
-date: 2023-07-27
+date: 2023-05-27
 weight: 2
 aliases: ["/diffusion"]
 tags: ["diffusion"]
